@@ -1,0 +1,179 @@
+/* Base Styles */
+:root {
+    --primary-bg: #0f172a;
+    --secondary-bg: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --border-color: #334155;
+    --primary-color: #3b82f6;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+}
+
+/* Apply to all elements */
+* {
+    font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: var(--text-primary);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Base Body */
+body {
+    background-color: var(--primary-bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+
+
+font-family: 'Inter', sans-serif; /* ලස්සන ෆොන්ට් එක */
+    background-color: #0f172a; /* Dark Blue Background */
+    color: #f8fafc; /* White Text */
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    color: #ffffff !important;
+    font-weight: 700;
+}
+
+/* Fix for Bootstrap Cards */
+.card {
+    background-color: #1e293b; /* Lighter Dark Blue */
+    border: 1px solid #334155;
+    color: #fff;
+}
+
+/* Fix for Inputs */
+.form-control, .form-select {
+    background-color: #1e293b !important;
+    border: 1px solid #334155 !important;
+    color: #fff !important;
+}
+
+/* Input Placeholder Color */
+::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* Tables */
+.table {
+    color: #f8fafc !important;
+
+/* Typography */
+h1, h2, h3, h4, h5, h6, 
+p, li, td, th, label, 
+input::placeholder, textarea::placeholder, select {
+    color: var(--text-primary) !important;
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: #60a5fa;
+}
+
+/* Forms */
+.form-control, 
+.form-select,
+.input-group-text {
+    background-color: var(--secondary-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.form-control:focus, 
+.form-select:focus {
+    background-color: var(--secondary-bg);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+}
+
+/* Cards */
+.card {
+    background-color: var(--secondary-bg);
+    border-color: var(--border-color);
+}
+
+.card-header, .card-footer {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-color: var(--border-color);
+}
+
+/* Tables */
+.table {
+    color: var(--text-primary);
+}
+
+.table-dark {
+    --bs-table-bg: var(--secondary-bg);
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.1);
+    border-color: var(--border-color);
+}
+
+/* Navs & Tabs */
+.nav-tabs .nav-link {
+    color: var(--text-secondary);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary-color);
+    background-color: var(--secondary-bg);
+    border-color: var(--border-color) var(--border-color) var(--secondary-bg);
+}
+
+/* Buttons */
+.btn-outline-light {
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.btn-outline-light:hover {
+    background-color: var(--secondary-bg);
+    color: var(--primary-color);
+}
+
+/* Custom Utilities */
+.text-muted {
+    color: #94a3b8 !important;
+}
+
+.text-dark {
+    color: var(--text-primary) !important;
+}
+
+.bg-light {
+    background-color: var(--secondary-bg) !important;
+}
+
+.bg-white {
+    background-color: var(--secondary-bg) !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--primary-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+}

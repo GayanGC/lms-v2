@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Dashboard - EduLMS</title>
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* Dark Theme Styles */
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .sidebar { width: 260px; height: 100vh; background: #1e293b; position: fixed; border-right: 1px solid #334155; padding: 20px; z-index: 1000; }
+        .main-content { margin-left: 260px; padding: 30px; }
+        .brand { font-size: 1.5rem; font-weight: bold; color: #3b82f6; text-decoration: none; display: block; margin-bottom: 2rem; }
+        .nav-link { color: #94a3b8; padding: 12px; display: flex; align-items: center; text-decoration: none; transition: 0.3s; cursor: pointer; }
+        .nav-link:hover, .nav-link.active { color: #fff; background: rgba(59, 130, 246, 0.1); border-radius: 8px; }
+        .nav-link i { width: 25px; margin-right: 10px; }
+        
+        /* Card & Table Styles */
+        .course-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; margin-bottom: 20px; transition: 0.3s; }
+        .table-dark { background-color: #1e293b; color: #f8fafc; --bs-table-bg: #1e293b; --bs-table-border-color: #334155; }
+        .table-dark th { border-bottom: 1px solid #334155; color: #94a3b8; }
+        .table-dark td { border-bottom: 1px solid #334155; vertical-align: middle; color: #e2e8f0; }
+        
+        /* Fix visibility in modals */
+        .modal-content { background-color: #1e293b; color: #fff; border: 1px solid #475569; }
+        .form-control, .form-select { background-color: #0f172a; border: 1px solid #334155; color: #fff; }
+        .form-control:focus, .form-select:focus { background-color: #0f172a; color: #fff; border-color: #3b82f6; box-shadow: none; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <a href="#" class="brand"><i class="fas fa-graduation-cap"></i> EduLMS</a>
+        <nav>
+            <a href="#" class="nav-link active" onclick="window.scrollTo(0,0)"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            
+            <a href="#coursesSection" class="nav-link"><i class="fas fa-book"></i> My Courses</a>
+            
+            <a href="#studentsSection" class="nav-link"><i class="fas fa-users"></i> Students</a>
+            
+            <div class="mt-5 pt-3 border-top border-secondary">
+                <a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-white">Instructor Dashboard</h2>
+                <p class="text-white-50">Welcome back, <span id="welcomeName" class="text-info fw-bold">Instructor</span></p>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+                <i class="fas fa-plus me-2"></i>New Course
+            </button>
+        </div>
+
+        <h4 class="mb-3 text-info" id="coursesSection" style="padding-top: 20px;">
+            <i class="fas fa-layer-group me-2"></i>My Courses
+        </h4>
+        
+        <div class="row mb-5" id="myCoursesContainer">
+            <div class="col-12 text-center py-3 text-muted">Loading your courses...</div>
+        </div>
+
+        <h4 class="mb-3 text-warning" id="studentsSection" style="padding-top: 20px;">
+            <i class="fas fa-user-graduate me-2"></i>Enrolled Students
+        </h4>
+        
+        <div class="card bg-dark border-secondary">
+            <div class="card-body p-0">
+                <table class="table table-dark table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="p-3">Student Name</th>
+                            <th>Email</th>
+                            <th>Enrolled Course</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        <tr><td colspan="4" class="text-center p-3 text-muted">Loading students...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addCourseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Create New Course</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createCourseForm">
+                        <div class="mb-3">
+                            <label class="form-label">Course Title</label>
+                            <input type="text" id="courseTitle" class="form-control" required placeholder="Ex: Java Programming">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea id="courseDesc" class="form-control" rows="3" required placeholder="Enter course details..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Duration</label>
+                            <select id="courseDuration" class="form-select">
+                                <option value="4 Weeks">4 Weeks</option>
+                                <option value="8 Weeks">8 Weeks</option>
+                                <option value="12 Weeks">12 Weeks</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Create Course</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="uploadPdfModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">Upload Course Material</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm">
+                        <input type="hidden" id="uploadCourseId" name="course_id">
+                        <input type="hidden" id="uploadInstructorId" name="instructor_id">
+
+                        <div class="mb-3">
+                            <label>File Title</label>
+                            <input type="text" name="title" class="form-control" required placeholder="e.g. Lecture 01 Notes">
+                        </div>
+                        <div class="mb-3">
+                            <label>Select PDF</label>
+                            <input type="file" name="pdf_file" accept="application/pdf" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">Upload Now</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+        // 1. Auth Check
+        if (!currentUser || currentUser.role !== 'instructor') {
+            window.location.href = '../login.html';
+        } else {
+            document.getElementById('welcomeName').textContent = currentUser.name;
+        }
+
+        // Initialize Functions
+        loadMyCourses();
+        loadMyStudents();
+
+        // 2. Load Instructor's Courses
+        async function loadMyCourses() {
+            try {
+                const response = await fetch(`../backend/get_my_courses.php?instructor_id=${currentUser.id}`);
+                const result = await response.json();
+                const container = document.getElementById('myCoursesContainer');
+                
+                if (result.status === 'success' && result.data.length > 0) {
+                    container.innerHTML = result.data.map(course => `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="course-card p-4">
+                                <h5>${course.title}</h5>
+                                <p class="text-white-50 small">${course.description}</p>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <span class="badge bg-secondary">${course.duration}</span>
+                                    <button class="btn btn-sm btn-outline-warning" onclick="openUploadModal(${course.id})">
+                                        <i class="fas fa-upload"></i> Upload PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `<div class="col-12 text-muted text-center">No courses created yet.</div>`;
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        // 3. Load Enrolled Students
+        async function loadMyStudents() {
+            try {
+                const response = await fetch(`../backend/get_my_students.php?instructor_id=${currentUser.id}`);
+                const result = await response.json();
+                const tbody = document.getElementById('studentTableBody');
+                
+                if (result.status === 'success' && result.data.length > 0) {
+                    tbody.innerHTML = result.data.map(student => `
+                        <tr>
+                            <td class="p-3"><i class="fas fa-user-circle me-2 text-primary"></i> ${student.student_name}</td>
+                            <td>${student.email}</td>
+                            <td><span class="badge bg-info text-dark">${student.course_title}</span></td>
+                            <td class="text-white-50 small">${new Date(student.enrolled_at).toLocaleDateString()}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-muted">No students enrolled yet.</td></tr>`;
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        // 4. Open Upload Modal
+        function openUploadModal(courseId) {
+            document.getElementById('uploadCourseId').value = courseId;
+            document.getElementById('uploadInstructorId').value = currentUser.id;
+            new bootstrap.Modal(document.getElementById('uploadPdfModal')).show();
+        }
+
+        // 5. Handle File Upload
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('../backend/upload_material.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if(result.status === 'success') {
+                    alert("✅ PDF Uploaded Successfully!");
+                    location.reload();
+                } else {
+                    alert("❌ Error: " + result.message);
+                }
+            } catch(err) {
+                alert("❌ Upload Failed!");
+                console.error(err);
+            }
+        });
+
+        // 6. Create New Course
+        document.getElementById('createCourseForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const courseData = {
+                title: document.getElementById('courseTitle').value,
+                description: document.getElementById('courseDesc').value,
+                duration: document.getElementById('courseDuration').value,
+                instructor_id: currentUser.id
+            };
+            try {
+                const response = await fetch('../backend/create_course.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(courseData)
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert("Course Created Successfully!");
+                    location.reload();
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (error) { alert("Failed!"); }
+        });
+
+        // Logout Function
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '../login.html';
+        }
+    </script>
+</body>
+</html>

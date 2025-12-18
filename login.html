@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - EduLMS Pro</title>
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f1f5f9;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --border-color: #334155;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .brand-logo {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-control {
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 0.8rem;
+        }
+
+        .form-control:focus {
+            background-color: #0f172a;
+            color: #fff;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 0.8rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .alert { display: none; margin-top: 1rem; padding: 0.5rem; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="brand-logo"><i class="fas fa-graduation-cap"></i> EduLMS</div>
+        
+        <form id="loginForm">
+            <div class="mb-3">
+                <label class="form-label text-muted small">EMAIL ADDRESS</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fas fa-envelope"></i></span>
+                    <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-muted small">PASSWORD</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fas fa-lock"></i></span>
+                    <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Sign In</button>
+            <div id="alertBox" class="alert rounded"></div>
+        </form>
+
+        <p class="text-center mt-4 text-muted small">
+            Don't have an account? <a href="register.html" class="text-primary text-decoration-none">Create one</a>
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const alertBox = document.getElementById('alertBox');
+            const btn = this.querySelector('button');
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+            btn.disabled = true;
+            alertBox.style.display = 'none';
+
+            try {
+                // Sending data to Backend
+                const response = await fetch('backend/login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, password: password })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Success! Save user details to LocalStorage
+                    localStorage.setItem('currentUser', JSON.stringify(result.user));
+                    
+                    alertBox.className = 'alert alert-success';
+                    alertBox.innerHTML = '✅ Login Successful! Redirecting...';
+                    alertBox.style.display = 'block';
+
+                    // Redirect based on Role (UPDATED SECTION)
+                    setTimeout(() => {
+                        if (result.user.role === 'admin') {
+                            // Redirect Admin
+                            window.location.href = 'pages/admin.html';
+                        } else if (result.user.role === 'instructor') {
+                            // Redirect Instructor
+                            window.location.href = 'pages/instructor.html';
+                        } else {
+                            // Redirect Student
+                            window.location.href = 'pages/student.html';
+                        }
+                    }, 1500);
+
+                } else {
+                    // This handles incorrect password OR "Pending Approval" message
+                    throw new Error(result.message || 'Login Failed');
+                }
+            } catch (error) {
+                alertBox.className = 'alert alert-danger';
+                alertBox.innerHTML = '❌ ' + error.message;
+                alertBox.style.display = 'block';
+                btn.innerHTML = 'Sign In';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

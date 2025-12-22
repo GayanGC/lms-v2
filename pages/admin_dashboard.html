@@ -19,7 +19,7 @@
         <h5 class="m-0">Admin Panel</h5>
       </div>
       <nav class="flex-grow-1">
-        <a href="./admin.html" class="nav-link">
+        <a href="./admin_dashboard.html" class="nav-link">
           <i class="fas fa-home"></i> Dashboard
         </a>
         <a href="./admin_users.html" class="nav-link">
@@ -27,6 +27,12 @@
         </a>
         <a href="./admin_courses.html" class="nav-link">
           <i class="fas fa-book"></i> Courses
+        </a>
+        <a href="./admin_notifications.html" class="nav-link">
+          <i class="fas fa-bell"></i> Notifications
+        </a>
+        <a href="./admin_profile.html" class="nav-link">
+          <i class="fas fa-id-badge"></i> Profile
         </a>
       </nav>
       <button class="btn btn-ghost w-100 mt-auto" onclick="logout()">
@@ -41,7 +47,7 @@
       </div>
       <div class="d-flex align-items-center gap-3">
         <button class="btn btn-ghost btn-sm"><i class="fa-regular fa-bell"></i></button>
-        <img class="avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=AD" alt="avatar" />
+        <img class="avatar" id="avatarImg" src="https://api.dicebear.com/7.x/initials/svg?seed=AD" alt="avatar" />
       </div>
     </header>
 
@@ -159,13 +165,17 @@
     </main>
 
     <script>
-      // Auth check & display name
       const currentUser = JSON.parse(localStorage.getItem('currentUser'));
       if (!currentUser || currentUser.role !== 'admin') {
         window.location.href = '../login.html';
       } else {
         document.getElementById('adminName').textContent = currentUser.name;
       }
+
+      (function setActiveNav(){
+        const links = document.querySelectorAll('.sidebar .nav-link');
+        links.forEach(a => { if (location.pathname.endsWith(a.getAttribute('href'))) a.classList.add('active'); });
+      })();
 
       document.addEventListener('DOMContentLoaded', loadAdminData);
 
@@ -183,7 +193,6 @@
             const totalUsers = (parseInt(stats.total_students || 0) + parseInt(stats.total_instructors || 0));
             document.getElementById('totalUsersMetric').textContent = totalUsers.toLocaleString();
             document.getElementById('instructorsMetric').textContent = parseInt(stats.total_instructors || 0).toLocaleString();
-            // Active courses: if available later, set; for now show pending count as proxy
             document.getElementById('activeCoursesMetric').textContent = (stats.total_pending || 0).toLocaleString();
 
             renderPendingTable(dash.data.pending_users || []);
@@ -198,124 +207,54 @@
         }
       }
 
-      function renderPendingTable(users) {
+      function renderPendingTable(list){
         const tbody = document.getElementById('pendingTableBody');
-        if (!users || users.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-4">No pending approvals found.</td></tr>';
+        if (!list.length){
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-3">No pending approvals</td></tr>';
           return;
         }
-        tbody.innerHTML = users.map(user => `
+        tbody.innerHTML = list.map(u => `
           <tr>
-            <td>${user.name}</td>
-            <td class="text-secondary">${user.email}</td>
-            <td>
-              <span class="badge badge-status ${user.role === 'instructor' ? 'badge-approved' : ''}">${user.role}</span>
-            </td>
-            <td class="small text-secondary">${new Date(user.created_at).toLocaleDateString()}</td>
-            <td><span class="badge badge-status badge-pending">Pending</span></td>
-            <td>
-              <button class="btn btn-gradient btn-sm" onclick="approveUser(${user.id})"><i class="fas fa-check"></i> Approve</button>
-            </td>
+            <td>${u.name}</td>
+            <td class="text-secondary">${u.email}</td>
+            <td>${u.role}</td>
+            <td>${u.created_at || '—'}</td>
+            <td><span class="badge badge-status badge-pending">pending</span></td>
+            <td><button class="btn btn-gradient btn-sm">Approve</button></td>
           </tr>
         `).join('');
       }
 
-      async function approveUser(userId) {
-        if (!confirm('Are you sure you want to approve this user?')) return;
-        try {
-          const response = await fetch('../backend/admin_actions.php?action=approve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId })
-          });
-          const result = await response.json();
-          if (result.status === 'success') {
-            loadAdminData();
-          } else {
-            alert('Error: ' + (result.message || 'Unexpected'));
-          }
-        } catch (e) {
-          console.error(e);
-          alert('Connection Failed');
-        }
-      }
-
-      function renderRevenue(monthlyStats) {
-        // Aggregate by month and map counts to revenue (placeholder multiplier)
-        const months = [...new Set(monthlyStats.map(m => m.month))];
-        const revenue = months.map(m => {
-          const entries = monthlyStats.filter(e => e.month === m);
-          const count = entries.reduce((sum, e) => sum + (parseInt(e.count || 0)), 0);
-          return count * 12; // simple multiplier to visualize revenue trend
-        });
-
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: months,
-            datasets: [{
-              label: 'Revenue',
-              data: revenue,
-              borderColor: '#8b5cf6',
-              backgroundColor: 'rgba(139,92,246,0.2)',
-              tension: 0.35,
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: '#f8fafc' } } },
-            scales: {
-              y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.18)' } },
-              x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
-            }
-          }
-        });
-
-        // Update revenue metric
-        const totalRevenue = revenue.reduce((a, b) => a + b, 0);
-        document.getElementById('revenueMetric').textContent = '$' + totalRevenue.toLocaleString();
-      }
-
-      function renderUserDistribution(stats) {
-        const students = parseInt(stats.total_students || 0);
-        const instructors = parseInt(stats.total_instructors || 0);
-        const ctx = document.getElementById('userDistributionChart').getContext('2d');
+      function renderUserDistribution(stats){
+        const ctx = document.getElementById('userDistributionChart');
+        if (!ctx) return;
         new Chart(ctx, {
           type: 'doughnut',
           data: {
             labels: ['Students', 'Instructors'],
-            datasets: [{
-              data: [students, instructors],
-              backgroundColor: ['#3b82f6', '#8b5cf6'],
-              borderColor: ['rgba(59,130,246,0.2)', 'rgba(139,92,246,0.2)'],
-              hoverOffset: 8
-            }]
+            datasets: [{ data: [stats.total_students || 0, stats.total_instructors || 0], backgroundColor: ['#0dcaf0','#8b5cf6'] }]
           },
-          options: {
-            plugins: {
-              legend: { position: 'bottom', labels: { color: '#f8fafc' } }
-            }
-          }
+          options: { plugins: { legend: { position: 'bottom' } } }
         });
       }
 
-      // Sidebar active link
-      (function setActiveNav(){
-        const links = document.querySelectorAll('.sidebar .nav-link');
-        links.forEach(a => {
-          if (a.getAttribute('href') && location.pathname.endsWith(a.getAttribute('href'))) {
-            a.classList.add('active');
-          }
+      function renderRevenue(months){
+        const ctx = document.getElementById('revenueChart');
+        if (!ctx) return;
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: months.map(m => m.month || ''),
+            datasets: [{ label: 'Revenue', data: months.map(m => m.amount || 0), borderColor: '#0dcaf0' }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
         });
-      })();
+      }
 
-      function logout() {
+      function logout(){
         localStorage.removeItem('currentUser');
         window.location.href = '../login.html';
       }
     </script>
   </body>
-</html>
+  </html>

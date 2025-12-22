@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Courses - EduLMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link href="../assets/css/style.css" rel="stylesheet" />
+  <link href="../assets/css/modern-theme.css" rel="stylesheet" />
+</head>
+<body class="dark-app">
+  <aside class="sidebar glass d-flex flex-column">
+    <div class="brand mb-3">
+      <i class="fas fa-user-graduate text-info"></i>
+      <h5 class="m-0">Student</h5>
+    </div>
+    <nav class="flex-grow-1">
+      <a href="./student_dashboard.html" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="./student_courses.html" class="nav-link"><i class="fas fa-book"></i> Courses</a>
+      <a href="./student_profile.html" class="nav-link"><i class="fas fa-id-badge"></i> Profile</a>
+    </nav>
+    <button class="btn btn-ghost w-100 mt-auto" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </aside>
+
+  <header class="topbar glass">
+    <div class="d-flex align-items-center gap-2">
+      <span class="gradient-text fw-bold">EduLMS</span>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <img class="avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=ST" alt="avatar" />
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h2 class="fw-bold">My Courses</h2>
+        <p class="text-secondary">Browse and manage your enrollments</p>
+      </div>
+    </div>
+    <hr class="divider" />
+    <section>
+      <div class="card-modern p-3">
+        <p class="text-secondary">Coming soon…</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser || currentUser.role !== 'student') { window.location.href = '../login.html'; }
+    (function setActiveNav(){
+      const links = document.querySelectorAll('.sidebar .nav-link');
+      links.forEach(a => { if (location.pathname.endsWith(a.getAttribute('href'))) a.classList.add('active'); });
+    })();
+    function logout(){ localStorage.removeItem('currentUser'); window.location.href = '../login.html'; }
+  </script>
+</body>
+</html>

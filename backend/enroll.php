@@ -4,6 +4,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
 require_once 'db.php';
+require_once 'helpers.php';
 
 $data = json_decode(file_get_contents("php://input"));
 
@@ -29,6 +30,8 @@ if(isset($data->user_id) && isset($data->course_id)) {
             $stmt->bindParam(":cid", $data->course_id);
 
             if($stmt->execute()) {
+                // Log activity for the student
+                logActivity((int)$data->user_id, 'Enrolled Course', 'Course ID: ' . (int)$data->course_id);
                 echo json_encode(["status" => "success", "message" => "Enrollment successful!"]);
             } else {
                 echo json_encode(["status" => "error", "message" => "Enrollment failed."]);

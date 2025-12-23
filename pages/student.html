@@ -3,220 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - EduLMS</title>
-    <link href="../assets/css/style.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Student Portal Redirect • EduLMS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
     <style>
-        /* Dark Theme Styles */
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
-        
-        /* Sidebar Styling */
-        .sidebar { width: 260px; height: 100vh; background: #1e293b; position: fixed; border-right: 1px solid #334155; padding: 20px; z-index: 1000; }
-        .main-content { margin-left: 260px; padding: 30px; }
-        
-        .brand { font-size: 1.5rem; font-weight: bold; color: #3b82f6; text-decoration: none; display: block; margin-bottom: 2rem; }
-        
-        .nav-link { color: #94a3b8; padding: 12px; display: flex; align-items: center; text-decoration: none; transition: 0.3s; cursor: pointer; }
-        .nav-link:hover, .nav-link.active { color: #fff; background: rgba(59, 130, 246, 0.1); border-radius: 8px; }
-        .nav-link i { width: 25px; margin-right: 10px; }
-
-        /* Fix visibility in modals */
-        .modal-content { background-color: #1e293b; color: #fff; border: 1px solid #475569; }
-        .list-group-item { background-color: #1e293b; color: #fff; border-color: #334155; }
-
-        /* --- SCROLLING FIXES --- */
-        /* Page එක බලෙන් දිග කිරීම (Testing සඳහා) */
-        .main-content {
-            min-height: 150vh; 
-            padding-bottom: 100px;
-        }
-        /* Section අතර පරතරයක් තැබීම */
-        #myCoursesContainer {
-            margin-bottom: 400px; 
-        }
-        /* Header එකට යට නොවී Scroll වීම */
-        html {
-            scroll-behavior: smooth;
-            scroll-padding-top: 20px; 
-        }
+        body { background-color:#0f172a; color:#f8fafc; font-family:system-ui, -apple-system, Segoe UI, Roboto, Inter, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; }
+        .container { min-height: 100vh; display:flex; align-items:center; justify-content:center; }
+        .card { background:#1e293b; border:1px solid #334155; border-radius:12px; padding:24px; max-width:520px; width:100%; }
+        .spinner-border { --bs-spinner-border-width: .25rem; }
+        a { color:#93c5fd; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-
-    <div class="sidebar">
-        <a href="#" class="brand"><i class="fas fa-graduation-cap"></i> EduLMS</a>
-        <nav>
-            <a href="#" class="nav-link active" onclick="window.scrollTo(0,0)"><i class="fas fa-home"></i> Dashboard</a>
-            
-            <a href="#myEnrollmentsSection" class="nav-link"><i class="fas fa-book"></i> My Courses</a>
-            
-            <div class="mt-5 border-top border-secondary pt-3">
-                <a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <div class="container">
+        <div class="card text-center">
+            <div class="mb-3">
+                <div class="spinner-border text-primary" role="status"></div>
             </div>
-        </nav>
-    </div>
-
-    <div class="main-content">
-        
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="fw-bold text-white">Student Dashboard</h2>
-                <p class="text-white-50">Welcome back, <span id="navUserName" class="text-info fw-bold">Student</span></p>
-            </div>
-        </div>
-
-        <h4 class="mb-4 text-primary" id="myEnrollmentsSection" style="padding-top: 20px;">
-            <i class="fas fa-check-circle me-2"></i>My Enrollments
-        </h4>
-        
-        <div class="row g-4 mb-5" id="myCoursesContainer">
-            <div class="col-12 text-muted">You haven't enrolled in any courses yet.</div>
-        </div>
-
-        <h4 class="mb-4 text-info"><i class="fas fa-globe me-2"></i>Available Courses</h4>
-        <div class="row g-4" id="allCoursesContainer">
-            <div class="col-12 text-center text-muted">Loading courses...</div>
+            <h4 class="fw-bold">Redirecting to Student Dashboard…</h4>
+            <p class="text-white-50 mb-0">If nothing happens, click
+                <a href="./student_dashboard.html">here</a>.
+            </p>
         </div>
     </div>
-
-    <div class="modal fade" id="viewMaterialsModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content bg-dark text-white border-secondary">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title" id="materialModalTitle">Course Materials</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <ul class="list-group list-group-flush" id="materialList">
-                        </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-
-        if (!currentUser) { window.location.href = '../login.html'; } 
-        else { document.getElementById('navUserName').textContent = currentUser.name; }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadAvailableCourses();
-            loadMyEnrollments();
-        });
-
-        // 1. Load Available Courses
-        async function loadAvailableCourses() {
-            const container = document.getElementById('allCoursesContainer');
-            try {
-                const response = await fetch('../backend/get_courses.php');
-                const result = await response.json();
-                container.innerHTML = ''; 
-
-                if (result.status === 'success' && result.data.length > 0) {
-                    result.data.forEach(course => {
-                        container.innerHTML += `
-                            <div class="col-md-4 mb-4">
-                                <div class="p-3 h-100 rounded border border-secondary" style="background:#1e293b;">
-                                    <span class="badge bg-primary mb-2">${course.duration || 'Flexible'}</span>
-                                    <h5 class="fw-bold text-white mt-2">${course.title}</h5>
-                                    <p class="text-white-50 small">${course.description}</p>
-                                    <div class="d-flex justify-content-between align-items-center mt-3">
-                                        <small class="text-info"><i class="fas fa-user-tie"></i> ${course.instructor_name || 'Unknown'}</small>
-                                        <button class="btn btn-sm btn-outline-success" onclick="enroll(${course.id})">Enroll Now</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                } else { container.innerHTML = '<div class="col-12 text-muted">No courses available.</div>'; }
-            } catch (error) { console.error(error); }
-        }
-
-        // 2. Load My Enrollments
-        async function loadMyEnrollments() {
-            const container = document.getElementById('myCoursesContainer');
-            try {
-                const response = await fetch(`../backend/get_my_enrollments.php?user_id=${currentUser.id}`);
-                const result = await response.json();
-
-                if (result.status === 'success' && result.data.length > 0) {
-                    container.innerHTML = '';
-                    result.data.forEach(course => {
-                        let cId = course.course_id || course.id; 
-                        
-                        container.innerHTML += `
-                            <div class="col-md-6 mb-3">
-                                <div class="p-3 rounded border border-primary" style="background: rgba(59, 130, 246, 0.1);">
-                                    <h5 class="fw-bold text-white">${course.title}</h5>
-                                    <p class="text-white-50 small mb-2">Instructor: ${course.instructor_name || 'Unknown'}</p>
-                                    
-                                    <button class="btn btn-sm btn-primary w-100 mt-2" onclick="viewMaterials(${cId}, '${course.title}')">
-                                        <i class="fas fa-file-pdf me-2"></i> View Materials
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                } else { container.innerHTML = '<div class="col-12 text-muted">You haven\'t enrolled in any courses yet.</div>'; }
-            } catch (error) { console.error(error); }
-        }
-
-        // 3. Enroll Function
-        async function enroll(courseId) {
-            if(!confirm("Do you want to enroll in this course?")) return;
-            try {
-                const response = await fetch('../backend/enroll.php', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: currentUser.id, course_id: courseId })
-                });
-                const result = await response.json();
-                if (result.status === 'success') {
-                    alert("🎉 Enrollment Successful!");
-                    loadMyEnrollments();
-                } else { alert("⚠️ " + result.message); }
-            } catch (error) { alert("Connection Failed!"); }
-        }
-
-        // 4. View Materials Function
-        async function viewMaterials(courseId, courseTitle) {
-            document.getElementById('materialModalTitle').textContent = courseTitle + " - Materials";
-            const list = document.getElementById('materialList');
-            list.innerHTML = '<li class="text-center text-muted p-3">Loading materials...</li>';
-            
-            new bootstrap.Modal(document.getElementById('viewMaterialsModal')).show();
-
-            try {
-                const response = await fetch(`../backend/get_materials.php?course_id=${courseId}`);
-                const result = await response.json();
-                list.innerHTML = '';
-                
-                if(result.status === 'success' && result.data.length > 0) {
-                    result.data.forEach(file => {
-                        list.innerHTML += `
-                            <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-file-pdf text-danger me-2"></i> ${file.title}</span>
-                                <a href="../${file.file_path}" target="_blank" class="btn btn-sm btn-light">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
-                            </li>
-                        `;
-                    });
-                } else { 
-                    list.innerHTML = '<li class="list-group-item bg-dark text-muted text-center p-3">No materials uploaded yet.</li>'; 
-                }
-            } catch(err) { 
-                console.error(err);
-                list.innerHTML = '<li class="text-danger text-center p-3">Failed to load materials.</li>';
+        (function() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user || user.role !== 'student') {
+                window.location.replace('../login.html');
+                return;
             }
-        }
-
-        function logout() { localStorage.removeItem('currentUser'); window.location.href = '../login.html'; }
+            // Redirect to the new separated student dashboard
+            window.location.replace('./student_dashboard.html');
+        })();
     </script>
 </body>
 </html>

@@ -4,21 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Dashboard - EduLMS</title>
+  
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <link href="../assets/css/style.css" rel="stylesheet" />
   <link href="../assets/css/modern-theme.css" rel="stylesheet" />
+
+  <style>
+      /* Dark Theme Styles */
+      body { background-color: #0f172a !important; color: #fff; }
+      .card-modern {
+          background: rgba(30, 41, 59, 0.7);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 12px;
+          color: white;
+          transition: transform 0.2s;
+          cursor: pointer;
+      }
+      .card-modern:hover {
+          transform: translateY(-5px);
+          border-color: #3b82f6;
+      }
+      .modal-content { background-color: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.1); }
+      .list-group-item { background: transparent; color: white; border-color: rgba(255,255,255,0.1); }
+  </style>
 </head>
 <body class="dark-app">
+
   <aside class="sidebar glass d-flex flex-column">
     <div class="brand mb-3">
       <i class="fas fa-user-graduate text-info"></i>
       <h5 class="m-0">Student</h5>
     </div>
     <nav class="flex-grow-1">
-      <a href="./student_dashboard.html" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="./student_dashboard.html" class="nav-link active"><i class="fas fa-home"></i> Dashboard</a>
       <a href="./student_courses.html" class="nav-link"><i class="fas fa-book"></i> Courses</a>
-      <a href="./student_profile.html" class="nav-link"><i class="fas fa-id-badge"></i> Profile</a>
+      <a href="student_profile.html" class="nav-link" onclick="openProfileModal()"><i class="fas fa-id-badge"></i> Profile</a>
     </nav>
     <button class="btn btn-ghost w-100 mt-auto" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
   </aside>
@@ -28,42 +49,158 @@
       <span class="gradient-text fw-bold">EduLMS</span>
     </div>
     <div class="d-flex align-items-center gap-3">
-      <img class="avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=ST" alt="avatar" />
+      <span id="topBarName" class="text-white small fw-bold">Loading...</span>
+      <img id="topBarAvatar" class="avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=ST" alt="avatar" />
     </div>
   </header>
 
   <main class="main">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div>
-        <h2 class="fw-bold">Student Dashboard</h2>
-        <p class="text-secondary">Overview of your learning</p>
+        <h2 class="fw-bold">Welcome, <span id="dashboardName" class="text-info">Student</span>! 👋</h2>
+        <p class="text-secondary">Here are your enrolled courses.</p>
       </div>
     </div>
+    
     <hr class="divider" />
-    <section class="row g-3">
-      <div class="col-12 col-md-6">
-        <div class="card-modern p-3">
-          <h6>My Courses</h6>
-          <p class="text-secondary">Coming soon…</p>
+    
+    <section class="row g-3" id="enrolledGrid">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-info" role="status"></div>
+            <p class="text-secondary mt-2">Loading your courses...</p>
         </div>
-      </div>
-      <div class="col-12 col-md-6">
-        <div class="card-modern p-3">
-          <h6>Progress</h6>
-          <p class="text-secondary">Coming soon…</p>
-        </div>
-      </div>
     </section>
   </main>
 
+  <div class="modal fade" id="materialsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="fas fa-folder-open text-warning me-2"></i> Course Materials</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="materialList" class="list-group list-group-flush"></ul>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div id="profileModalContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/profile-modal.js"></script>
+
   <script>
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser || currentUser.role !== 'student') { window.location.href = '../login.html'; }
-    (function setActiveNav(){
-      const links = document.querySelectorAll('.sidebar .nav-link');
-      links.forEach(a => { if (location.pathname.endsWith(a.getAttribute('href'))) a.classList.add('active'); });
-    })();
-    function logout(){ localStorage.removeItem('currentUser'); window.location.href = '../login.html'; }
+    // 1. Auth Setup (Consistent with Courses Page)
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('user') || 'null');
+
+    if (!currentUser || currentUser.role !== 'student') {
+        window.location.href = '../login.html';
+    }
+
+    // Capture User ID correctly (The Fix)
+    const userId = currentUser.id || currentUser.user_id || currentUser.userId;
+
+    if (!userId) {
+        alert("Login Error: User ID missing. Please login again.");
+        window.location.href = '../login.html';
+    }
+
+    // UI Updates
+    document.getElementById('topBarName').textContent = currentUser.name;
+    document.getElementById('dashboardName').textContent = currentUser.name;
+    if(currentUser.profile_pic) {
+        document.getElementById('topBarAvatar').src = `../assets/uploads/profiles/${currentUser.profile_pic}`;
+    } else {
+        document.getElementById('topBarAvatar').src = `https://ui-avatars.com/api/?name=${currentUser.name}&background=0D8ABC&color=fff`;
+    }
+
+    // 2. Load Enrolled Courses
+    async function loadDashboard() {
+        const grid = document.getElementById('enrolledGrid');
+
+        try {
+            // Using user_id here just like in the course page fix
+            const res = await fetch(`../backend/get_my_enrollments.php?user_id=${userId}`);
+            const result = await res.json();
+
+            // Handle Data (Check if array or wrapped in 'data')
+            const enrollments = Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+
+            if (enrollments.length > 0) {
+                grid.innerHTML = enrollments.map(course => `
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card-modern h-100 d-flex flex-column p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">${course.duration || 'Flexible'}</span>
+                                <i class="fas fa-book-reader text-secondary"></i>
+                            </div>
+                            
+                            <h5 class="fw-bold text-white mb-1">${course.title}</h5>
+                            <p class="text-secondary small mb-3">by ${course.instructor_name || 'Instructor'}</p>
+                            
+                            <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 w-100">
+                                <button onclick="openMaterials(${course.course_id || course.id})" class="btn btn-sm btn-outline-info w-100">
+                                    <i class="fas fa-download me-2"></i> View Materials
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                grid.innerHTML = `
+                    <div class="col-12">
+                        <div class="card-modern p-5 text-center">
+                            <i class="fas fa-box-open fa-3x text-secondary mb-3"></i>
+                            <h6 class="text-white">No courses yet!</h6>
+                            <p class="text-secondary">Enroll in a course to see it here.</p>
+                            <a href="student_courses.html" class="btn btn-primary btn-sm mt-2">Browse Courses</a>
+                        </div>
+                    </div>`;
+            }
+        } catch (err) {
+            console.error(err);
+            grid.innerHTML = `<div class="col-12 text-danger text-center">Failed to load courses.</div>`;
+        }
+    }
+
+    // 3. Open Materials Logic
+    async function openMaterials(courseId) {
+        const list = document.getElementById('materialList');
+        list.innerHTML = '<li class="list-group-item text-center">Loading...</li>';
+        new bootstrap.Modal(document.getElementById('materialsModal')).show();
+
+        try {
+            const res = await fetch(`../backend/get_materials.php?course_id=${courseId}`);
+            const result = await res.json();
+
+            if(result.status === 'success' && result.data.length > 0) {
+                list.innerHTML = result.data.map(file => `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-truncate" style="max-width: 80%;">
+                            <i class="fas fa-file-pdf text-danger me-2"></i> ${file.file_path}
+                        </span>
+                        <a href="../assets/uploads/${file.file_path}" target="_blank" class="btn btn-sm btn-light">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </li>
+                `).join('');
+            } else {
+                list.innerHTML = '<li class="list-group-item text-center text-secondary">No materials uploaded yet.</li>';
+            }
+        } catch (error) {
+            list.innerHTML = '<li class="list-group-item text-center text-danger">Error fetching files.</li>';
+        }
+    }
+
+    function logout(){ 
+        localStorage.removeItem('currentUser'); 
+        localStorage.removeItem('user'); 
+        window.location.href = '../login.html'; 
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
   </script>
 </body>
 </html>

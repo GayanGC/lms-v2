@@ -8,12 +8,13 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <link href="../assets/css/style.css" rel="stylesheet" />
   <link href="../assets/css/modern-theme.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="dark-app">
   <aside class="sidebar glass d-flex flex-column">
     <div class="brand mb-3">
       <i class="fas fa-chalkboard-teacher text-info"></i>
-      <h5 class="m-0">Instructor</h5>
+      <h5 class="m-0" id="instructorName">Instructor</h5>
     </div>
     <nav class="flex-grow-1">
       <a href="./instructor_dashboard.html" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
@@ -28,29 +29,61 @@
       <span class="gradient-text fw-bold">EduLMS</span>
     </div>
     <div class="d-flex align-items-center gap-3">
-      <img class="avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=IN" alt="avatar" />
+      <img class="avatar" id="avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=IN" alt="avatar" />
     </div>
   </header>
 
   <main class="main">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div>
-        <h2 class="fw-bold">Instructor Dashboard</h2>
+        <h2 class="fw-bold">Welcome back, <span id="welcomeName">Instructor</span></h2>
         <p class="text-secondary">Manage your teaching activities</p>
       </div>
     </div>
     <hr class="divider" />
-    <section class="row g-3">
-      <div class="col-12 col-md-6">
-        <div class="card-modern p-3">
-          <h6>My Courses</h6>
-          <p class="text-secondary">Coming soon…</p>
+    <!-- Summary Cards -->
+    <section class="row g-3 mb-4">
+      <div class="col-12 col-md-4">
+        <div class="card-modern p-3 d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-secondary small">Total Courses</div>
+            <div class="h3 m-0" id="statCourses">0</div>
+          </div>
+          <i class="fas fa-book-open text-info fs-3"></i>
         </div>
       </div>
-      <div class="col-12 col-md-6">
+      <div class="col-12 col-md-4">
+        <div class="card-modern p-3 d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-secondary small">Total Students</div>
+            <div class="h3 m-0" id="statStudents">0</div>
+          </div>
+          <i class="fas fa-user-graduate text-success fs-3"></i>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="card-modern p-3 d-flex justify-content-between align-items-center">
+          <div>
+            <div class="text-secondary small">Materials Uploaded</div>
+            <div class="h3 m-0" id="statMaterials">0</div>
+          </div>
+          <i class="fas fa-file-pdf text-warning fs-3"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analytics Charts -->
+    <section class="row g-3">
+      <div class="col-12 col-lg-7">
         <div class="card-modern p-3">
-          <h6>Recent Activities</h6>
-          <p class="text-secondary">Coming soon…</p>
+          <h6 class="mb-2">Student Enrollments per Course</h6>
+          <canvas id="enrollmentsChart" height="160"></canvas>
+        </div>
+      </div>
+      <div class="col-12 col-lg-5">
+        <div class="card-modern p-3">
+          <h6 class="mb-2">Average Course Completion</h6>
+          <canvas id="completionChart" height="160"></canvas>
         </div>
       </div>
     </section>
@@ -64,6 +97,100 @@
       links.forEach(a => { if (location.pathname.endsWith(a.getAttribute('href'))) a.classList.add('active'); });
     })();
     function logout(){ localStorage.removeItem('currentUser'); window.location.href = '../login.html'; }
+
+    // Set UI user info
+    document.getElementById('instructorName').textContent = currentUser?.name || 'Instructor';
+    document.getElementById('welcomeName').textContent = currentUser?.name || 'Instructor';
+    document.getElementById('avatar').src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser?.name || 'IN')}`;
+
+    // Load dashboard data
+    document.addEventListener('DOMContentLoaded', async () => {
+      const courses = await fetchCourses();
+      const students = await fetchStudents();
+      const materialsCount = await countMaterials(courses);
+
+      // Summary cards
+      document.getElementById('statCourses').textContent = courses.length;
+      document.getElementById('statStudents').textContent = students.length;
+      document.getElementById('statMaterials').textContent = materialsCount;
+
+      // Charts
+      renderEnrollmentsChart(courses, students);
+      renderCompletionChart(courses);
+    });
+
+    async function fetchCourses(){
+      try{
+        const res = await fetch(`../backend/get_my_courses.php?instructor_id=${currentUser.id}`);
+        const json = await res.json();
+        return (json.status === 'success' && Array.isArray(json.data)) ? json.data : [];
+      } catch(err){ console.error(err); return []; }
+    }
+    async function fetchStudents(){
+      try{
+        const res = await fetch(`../backend/get_my_students.php?instructor_id=${currentUser.id}`);
+        const json = await res.json();
+        return (json.status === 'success' && Array.isArray(json.data)) ? json.data : [];
+      } catch(err){ console.error(err); return []; }
+    }
+    async function countMaterials(courses){
+      let total = 0;
+      for (const c of courses){
+        try{
+          const res = await fetch(`../backend/get_materials.php?course_id=${c.id}`);
+          const json = await res.json();
+          if (json.status === 'success' && Array.isArray(json.data)) total += json.data.length;
+        }catch(err){ console.warn('materials count failed for course', c.id); }
+      }
+      return total;
+    }
+
+    function renderEnrollmentsChart(courses, students){
+      const counts = {};
+      courses.forEach(c => counts[c.title] = 0);
+      students.forEach(s => { if (counts[s.course_title] !== undefined) counts[s.course_title]++; });
+      const labels = Object.keys(counts);
+      const values = labels.map(l => counts[l]);
+      const ctx = document.getElementById('enrollmentsChart');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Enrollments',
+            data: values,
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            borderColor: 'rgb(59, 130, 246)',
+            borderWidth: 1,
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function renderCompletionChart(courses){
+      // Mock average completion: per course random 50-90%, averaged
+      const rates = courses.length ? courses.map(() => Math.round(50 + Math.random()*40)) : [70, 65, 75];
+      const avg = Math.round(rates.reduce((a,b)=>a+b,0) / rates.length);
+      const ctx = document.getElementById('completionChart');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Completed', 'Remaining'],
+          datasets: [{
+            data: [avg, 100-avg],
+            backgroundColor: ['rgb(34,197,94)', 'rgb(2,132,199)'],
+            hoverOffset: 4
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

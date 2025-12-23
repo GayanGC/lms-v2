@@ -19,7 +19,7 @@
         <h5 class="m-0">Admin Panel</h5>
       </div>
       <nav class="flex-grow-1">
-        <a href="./admin_dashboard.html" class="nav-link">
+        <a href="./admin.html" class="nav-link">
           <i class="fas fa-home"></i> Dashboard
         </a>
         <a href="./admin_users.html" class="nav-link">
@@ -47,6 +47,9 @@
       </div>
       <div class="d-flex align-items-center gap-3">
         <button class="btn btn-ghost btn-sm"><i class="fa-regular fa-bell"></i></button>
+        <button id="profileTrigger" class="btn btn-outline-light btn-sm rounded-circle d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px" title="Profile">
+          <span id="profileInitial" class="fw-bold">A</span>
+        </button>
         <img class="avatar" id="avatarImg" src="https://api.dicebear.com/7.x/initials/svg?seed=AD" alt="avatar" />
       </div>
     </header>
@@ -164,12 +167,67 @@
       </section>
     </main>
 
+    <!-- Profile Modal (Reusable across roles) -->
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass">
+          <div class="modal-header">
+            <h5 class="modal-title">My Profile</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="profileForm" enctype="multipart/form-data">
+              <input type="hidden" name="id" id="profileId" />
+              <div class="row g-3">
+                <div class="col-12 col-md-4 text-center">
+                  <img id="profilePhotoPreview" src="" alt="Profile Photo" class="rounded-circle border border-secondary" style="width:120px;height:120px;object-fit:cover" />
+                  <div class="mt-2">
+                    <input type="file" class="form-control form-control-sm" id="profilePhoto" name="profile_pic" accept="image/*" disabled />
+                  </div>
+                </div>
+                <div class="col-12 col-md-8">
+                  <div class="mb-2">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-control" id="profileName" name="name" disabled />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" id="profileEmail" name="email" disabled />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Role</label>
+                    <input type="text" class="form-control" id="profileRole" name="role" disabled />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Phone</label>
+                    <input type="text" class="form-control" id="profilePhone" name="phone" disabled />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Bio</label>
+                    <textarea class="form-control" id="profileBio" name="bio" rows="3" disabled></textarea>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer d-flex justify-content-between">
+            <div class="text-secondary small">Changes are saved to your account.</div>
+            <div>
+              <button id="editProfileBtn" type="button" class="btn btn-outline-primary">Edit Profile</button>
+              <button id="saveProfileBtn" type="button" class="btn btn-primary" disabled>Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
       const currentUser = JSON.parse(localStorage.getItem('currentUser'));
       if (!currentUser || currentUser.role !== 'admin') {
         window.location.href = '../login.html';
       } else {
         document.getElementById('adminName').textContent = currentUser.name;
+        document.getElementById('profileInitial').textContent = (currentUser.name?.charAt(0) || 'A').toUpperCase();
       }
 
       (function setActiveNav(){
@@ -255,6 +313,6 @@
         localStorage.removeItem('currentUser');
         window.location.href = '../login.html';
       }
-    </script>
+    <script src="../assets/js/profile-modal.js"></script>
   </body>
   </html>
